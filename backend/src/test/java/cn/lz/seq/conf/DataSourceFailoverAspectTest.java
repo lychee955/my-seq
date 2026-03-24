@@ -60,16 +60,16 @@ class DataSourceFailoverAspectTest {
     void setUp() {
         faultDataSourceMap = new ConcurrentHashMap<>();
         lenient().when(dynamicDataSource.getFaultDataSourceMap()).thenReturn(faultDataSourceMap);
-        when(routingStrategyFactory.getReceiptHandleStrategy(anyString())).thenReturn(randomRoutingStrategy);
+        when(routingStrategyFactory.getRoutingStrategy(anyString())).thenReturn(randomRoutingStrategy);
         when(joinPoint.getSignature()).thenReturn(signature);
         when(signature.getDeclaringTypeName()).thenReturn("cn.lz.seq.dao.SeqDao");
         when(signature.getName()).thenReturn("getSeq");
-        DynamicDataSourceContextHolder.clearDateSourceNos();
+        DynamicDataSourceContextHolder.clearDataSourceNos();
     }
 
     @AfterEach
     void tearDown() {
-        DynamicDataSourceContextHolder.clearDateSourceNos();
+        DynamicDataSourceContextHolder.clearDataSourceNos();
     }
 
     @Test
@@ -87,7 +87,7 @@ class DataSourceFailoverAspectTest {
         verify(randomRoutingStrategy).selectDb();
         verify(joinPoint).proceed();
         // Verify context was cleared
-        assertThat(DynamicDataSourceContextHolder.getDateSourceNo()).isNull();
+        assertThat(DynamicDataSourceContextHolder.getDataSourceNo()).isNull();
     }
 
     @Test
@@ -97,7 +97,7 @@ class DataSourceFailoverAspectTest {
         String secondDb = "db2";
         Object expectedResult = 456L;
 
-        DynamicDataSourceContextHolder.setDateSourceNo(firstDb);
+        DynamicDataSourceContextHolder.setDataSourceNo(firstDb);
         when(randomRoutingStrategy.selectDb()).thenReturn(firstDb).thenReturn(secondDb);
         when(joinPoint.proceed())
                 .thenThrow(new CannotGetJdbcConnectionException("Connection failed"))
@@ -135,14 +135,14 @@ class DataSourceFailoverAspectTest {
     }
 
     @Test
-    void testSecondFailure_ThrowsRuntimeException() throws Throwable {
+    void testSecondFailure_ThrowsOriginalException() throws Throwable {
         // Setup
         String firstDb = "db1";
         String secondDb = "db2";
         CannotGetJdbcConnectionException firstException = new CannotGetJdbcConnectionException("First failed");
         CannotGetJdbcConnectionException secondException = new CannotGetJdbcConnectionException("Second failed");
 
-        DynamicDataSourceContextHolder.setDateSourceNo(firstDb);
+        DynamicDataSourceContextHolder.setDataSourceNo(firstDb);
         when(randomRoutingStrategy.selectDb()).thenReturn(firstDb).thenReturn(secondDb);
         when(joinPoint.proceed())
                 .thenThrow(firstException)
@@ -150,8 +150,7 @@ class DataSourceFailoverAspectTest {
 
         // Execute & Verify
         assertThatThrownBy(() -> aspect.afterThrowingDataAccessOperationException(joinPoint, dynamicSwitch))
-                .isInstanceOf(RuntimeException.class)
-                .hasCause(secondException);
+                .isEqualTo(secondException);
 
         // Verify two attempts
         verify(joinPoint, times(2)).proceed();
@@ -165,13 +164,13 @@ class DataSourceFailoverAspectTest {
         when(joinPoint.proceed()).thenReturn("result");
 
         // Set some context before
-        DynamicDataSourceContextHolder.setDateSourceNo("db1");
+        DynamicDataSourceContextHolder.setDataSourceNo("db1");
 
         // Execute
         aspect.afterThrowingDataAccessOperationException(joinPoint, dynamicSwitch);
 
         // Verify context was cleared in finally block
-        assertThat(DynamicDataSourceContextHolder.getDateSourceNo()).isNull();
+        assertThat(DynamicDataSourceContextHolder.getDataSourceNo()).isNull();
     }
 
     @Test
@@ -181,12 +180,12 @@ class DataSourceFailoverAspectTest {
         when(joinPoint.proceed()).thenThrow(new RuntimeException("Error"));
 
         // Set some context before
-        DynamicDataSourceContextHolder.setDateSourceNo("db1");
+        DynamicDataSourceContextHolder.setDataSourceNo("db1");
 
         // Execute
         assertThatThrownBy(() -> aspect.afterThrowingDataAccessOperationException(joinPoint, dynamicSwitch));
 
         // Verify context was cleared in finally block
-        assertThat(DynamicDataSourceContextHolder.getDateSourceNo()).isNull();
+        assertThat(DynamicDataSourceContextHolder.getDataSourceNo()).isNull();
     }
 }

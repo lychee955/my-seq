@@ -13,10 +13,16 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Component
 public class SeqDao {
+
+    /**
+     * 只允许字母、数字和下划线的表名，防止SQL注入
+     */
+    private static final Pattern TABLE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]+$");
 
     /**
      * 不知为什么，使用jdbcTemplate比直接使用DruidDataSource效率更高
@@ -26,9 +32,12 @@ public class SeqDao {
 
     @DynamicSwitch() // 使用注解进行增强
     public BigInteger getSeq(String tableName) {
+        // 校验表名，防止SQL注入
+        if (tableName == null || !TABLE_NAME_PATTERN.matcher(tableName).matches()) {
+            throw new IllegalArgumentException("Invalid table name: " + tableName);
+        }
+
         try {
-            // todo 对接zk
-            // todo 迁移至service
             KeyHolder keyHolder = new GeneratedKeyHolder();
             String sql = "replace into " + tableName + " (stub) values ('0')";
             log.debug("执行sql: {}", sql);

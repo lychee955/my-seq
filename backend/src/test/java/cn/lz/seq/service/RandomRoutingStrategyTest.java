@@ -32,12 +32,12 @@ class RandomRoutingStrategyTest {
 
     @BeforeEach
     void setUp() {
-        DynamicDataSourceContextHolder.clearDateSourceNos();
+        DynamicDataSourceContextHolder.clearDataSourceNos();
     }
 
     @AfterEach
     void tearDown() {
-        DynamicDataSourceContextHolder.clearDateSourceNos();
+        DynamicDataSourceContextHolder.clearDataSourceNos();
     }
 
     @Test
@@ -61,7 +61,7 @@ class RandomRoutingStrategyTest {
 
         String selected = randomRoutingStrategy.selectDb();
 
-        assertThat(DynamicDataSourceContextHolder.getDateSourceNo()).isEqualTo(selected);
+        assertThat(DynamicDataSourceContextHolder.getDataSourceNo()).isEqualTo(selected);
     }
 
     @Test
@@ -89,7 +89,7 @@ class RandomRoutingStrategyTest {
         for (int i = 0; i < iterations; i++) {
             String selected = randomRoutingStrategy.selectDb();
             selectionCount.merge(selected, 1, Integer::sum);
-            DynamicDataSourceContextHolder.clearDateSourceNos();
+            DynamicDataSourceContextHolder.clearDataSourceNos();
         }
 
         // Both should be selected at least once (with high probability)
@@ -112,6 +112,6 @@ class RandomRoutingStrategyTest {
         String selected = randomRoutingStrategy.selectDb();
 
         assertThat(selected).isIn(dataSources);
-        assertThat(DynamicDataSourceContextHolder.getDateSourceNo()).isEqualTo(selected);
+        assertThat(DynamicDataSourceContextHolder.getDataSourceNo()).isEqualTo(selected);
     }
 }

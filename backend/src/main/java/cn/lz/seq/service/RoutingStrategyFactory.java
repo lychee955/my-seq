@@ -1,5 +1,6 @@
 package cn.lz.seq.service;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -17,12 +18,13 @@ public class RoutingStrategyFactory {
     @Autowired
     private RandomRoutingStrategy randomRoutingStrategy;
 
-    private RoutingStrategyFactory() {
+    @PostConstruct
+    public void init() {
         this.routingStrategyMap.put("random", randomRoutingStrategy);
     }
 
-    public RoutingStrategy getReceiptHandleStrategy(String receiptType) {
-        RoutingStrategy routingStrategy = routingStrategyMap.get(receiptType);
+    public RoutingStrategy getRoutingStrategy(String strategyType) {
+        RoutingStrategy routingStrategy = routingStrategyMap.get(strategyType);
         if (routingStrategy == null) {
             return randomRoutingStrategy;
         }

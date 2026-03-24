@@ -84,13 +84,13 @@ class DynamicDataSourceTest {
 
     @Test
     void testDetermineCurrentLookupKey_ReturnsContextDataSource() {
-        DynamicDataSourceContextHolder.setDateSourceNo("db1");
+        DynamicDataSourceContextHolder.setDataSourceNo("db1");
 
         Object lookupKey = dynamicDataSource.determineCurrentLookupKey();
 
         assertThat(lookupKey).isEqualTo("db1");
 
-        DynamicDataSourceContextHolder.clearDateSourceNos();
+        DynamicDataSourceContextHolder.clearDataSourceNos();
     }
 
     @Test

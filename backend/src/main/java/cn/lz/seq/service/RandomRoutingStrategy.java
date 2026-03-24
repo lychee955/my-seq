@@ -22,7 +22,7 @@ public class RandomRoutingStrategy implements RoutingStrategy {
         int randomIndex = random.nextInt(dataSourceKeys.size());
         String randomItem = dataSourceKeys.get(randomIndex);
         // 设置当前上下文的数据源No
-        DynamicDataSourceContextHolder.setDateSourceNo(randomItem);
+        DynamicDataSourceContextHolder.setDataSourceNo(randomItem);
         return randomItem;
     }
 }

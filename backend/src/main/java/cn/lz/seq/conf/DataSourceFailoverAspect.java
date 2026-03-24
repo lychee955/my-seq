@@ -35,7 +35,7 @@ public class DataSourceFailoverAspect {
         String methodName = joinPoint.getSignature().getName();
         log.debug("Entering method {} of class {}", methodName, className);
         // 在每个数据访问操作之前，可以设置默认的数据源
-        RoutingStrategy routingStrategy = routingStrategyFactory.getReceiptHandleStrategy("random");
+        RoutingStrategy routingStrategy = routingStrategyFactory.getRoutingStrategy("random");
         // 根据当前策略选择数据库
         var dataSourceNo = routingStrategy.selectDb();
         log.debug("当前策略选定的数据源No: {}", dataSourceNo);
@@ -45,9 +45,9 @@ public class DataSourceFailoverAspect {
             // 判断异常类型，如果是数据访问异常，则尝试切换数据源
             if (e instanceof CannotGetJdbcConnectionException) {
                 // 描黑当前数据源
-                dynamicDataSource.getFaultDataSourceMap().put(DynamicDataSourceContextHolder.getDateSourceNo(), System.currentTimeMillis());
+                dynamicDataSource.getFaultDataSourceMap().put(DynamicDataSourceContextHolder.getDataSourceNo(), System.currentTimeMillis());
                 dynamicDataSource.handleFaultDataSource();
-                DynamicDataSourceContextHolder.clearDateSourceNos();
+                DynamicDataSourceContextHolder.clearDataSourceNos();
                 try {
                     // 重新选择选择数据库
                     var dataSourceNo2 = routingStrategy.selectDb();
@@ -55,7 +55,7 @@ public class DataSourceFailoverAspect {
                     return joinPoint.proceed();
                 } catch (Throwable ex) {
                     log.info("指定切点失败，不再进行转移");
-                    throw new RuntimeException(ex);
+                    throw ex;
                 }
             } else {
                 log.error("获取id失败, 数据源No: {}", dataSourceNo, e);
@@ -63,7 +63,7 @@ public class DataSourceFailoverAspect {
             }
         } finally {
             long elapsedTime = System.currentTimeMillis() - start;
-            DynamicDataSourceContextHolder.clearDateSourceNos();
+            DynamicDataSourceContextHolder.clearDataSourceNos();
             log.debug("Exiting method {} of class {} took {} ms", methodName, className, elapsedTime);
         }
     }
