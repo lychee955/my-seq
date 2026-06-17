@@ -5,9 +5,6 @@ import cn.lz.seq.conf.DynamicDataSourceContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-
 @Component
 public class RandomRoutingStrategy implements RoutingStrategy {
 
@@ -16,11 +13,8 @@ public class RandomRoutingStrategy implements RoutingStrategy {
 
     @Override
     public String selectDb() {
-        List<String> dataSourceKeys = dynamicDataSource.getAllAliveDataSourceKeys();
-        int randomIndex = ThreadLocalRandom.current().nextInt(dataSourceKeys.size());
-        String randomItem = dataSourceKeys.get(randomIndex);
-        // 设置当前上下文的数据源No
-        DynamicDataSourceContextHolder.setDataSourceNo(randomItem);
-        return randomItem;
+        String key = dynamicDataSource.selectAliveDataSource(null);
+        DynamicDataSourceContextHolder.setDataSourceNo(key);
+        return key;
     }
 }

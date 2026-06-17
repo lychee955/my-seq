@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -52,17 +53,14 @@ class SeqServiceImplTest {
     }
 
     @Test
-    void testGetSeq_TokenDoesNotExist_ReturnsMinusOne() {
-        // Setup
+    void testGetSeq_TokenDoesNotExist_ThrowsException() {
         String token = "unknown_token";
 
         when(zNodeWatcherService.getTableNameByToken(token)).thenReturn(null);
 
-        // Execute
-        BigInteger result = seqService.getSeq(token);
-
-        // Verify
-        assertThat(result).isEqualTo(BigInteger.valueOf(-1));
+        assertThatThrownBy(() -> seqService.getSeq(token))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Invalid token");
         verify(zNodeWatcherService).getTableNameByToken(token);
         verify(seqDao, never()).getSeq(anyString());
     }
@@ -113,15 +111,12 @@ class SeqServiceImplTest {
     }
 
     @Test
-    void testGetSeq_TokenIsNull_StillCallsZNodeWatcher() {
-        // Setup
+    void testGetSeq_TokenIsNull_ThrowsException() {
         when(zNodeWatcherService.getTableNameByToken(null)).thenReturn(null);
 
-        // Execute
-        BigInteger result = seqService.getSeq(null);
-
-        // Verify
-        assertThat(result).isEqualTo(BigInteger.valueOf(-1));
+        assertThatThrownBy(() -> seqService.getSeq(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Invalid token");
         verify(zNodeWatcherService).getTableNameByToken(null);
     }
 }
