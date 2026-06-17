@@ -3,6 +3,7 @@ package cn.lz.seq.conf;
 import cn.lz.seq.dao.DynamicSwitch;
 import cn.lz.seq.service.RoutingStrategy;
 import cn.lz.seq.service.RoutingStrategyFactory;
+import cn.lz.seq.zk.ZNodeWatcherService;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -21,6 +22,9 @@ public class DataSourceFailoverAspect {
     @Autowired
     private DynamicDataSource dynamicDataSource;
 
+    @Autowired
+    private ZNodeWatcherService zNodeWatcherService;
+
     @Pointcut("execution(* cn.lz.seq.dao.SeqDao.getSeq(..))")
     public void dataAccessOperation() {
     }
@@ -35,7 +39,7 @@ public class DataSourceFailoverAspect {
         String methodName = joinPoint.getSignature().getName();
         log.debug("Entering method {} of class {}", methodName, className);
         // 在每个数据访问操作之前，可以设置默认的数据源
-        RoutingStrategy routingStrategy = routingStrategyFactory.getRoutingStrategy("random");
+        RoutingStrategy routingStrategy = routingStrategyFactory.getRoutingStrategy(zNodeWatcherService.getCurStrategy());
         // 根据当前策略选择数据库
         var dataSourceNo = routingStrategy.selectDb();
         log.debug("当前策略选定的数据源No: {}", dataSourceNo);

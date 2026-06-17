@@ -1,5 +1,6 @@
 package cn.lz.seq.conf;
 
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -12,12 +13,15 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class CuratorConfig {
+
+    private CuratorFramework curatorFramework;
+
     @Bean("curatorFramework")
     public CuratorFramework initZk(@Autowired ZKProp zkProp) {
 
         try {
             RetryPolicy retryPolicy = new ExponentialBackoffRetry(zkProp.getElapsedTimeMs(), zkProp.getRetryCount());
-            CuratorFramework curatorFramework = CuratorFrameworkFactory.builder()
+            curatorFramework = CuratorFrameworkFactory.builder()
                     .connectString(zkProp.getConnectString()).retryPolicy(retryPolicy)
                     .sessionTimeoutMs(zkProp.getSessionTimeoutMs())
                     .connectionTimeoutMs(zkProp.getConnectionTimeoutMs())
@@ -29,6 +33,14 @@ public class CuratorConfig {
         } catch (Exception e) {
             log.error("连接zk失败", e);
             throw e;
+        }
+    }
+
+    @PreDestroy
+    public void destroy() {
+        if (curatorFramework != null) {
+            log.info("Closing CuratorFramework connection");
+            curatorFramework.close();
         }
     }
 }

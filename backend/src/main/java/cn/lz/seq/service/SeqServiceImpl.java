@@ -23,8 +23,7 @@ public class SeqServiceImpl implements SeqService {
     public BigInteger getSeq(String token) {
         String tableName = zNodeWatcherService.getTableNameByToken(token);
         if (tableName == null) {
-            log.info("token: {}, seq: {}", token, -1);
-            return BigInteger.valueOf(-1);
+            throw new IllegalArgumentException("Invalid token: " + token);
         }
         BigInteger seq = seqDao.getSeq(tableName);
         log.info("token: {}, seq: {}", token, seq);

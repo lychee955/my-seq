@@ -1,5 +1,6 @@
 package cn.lz.seq.zk;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.CuratorCache;
@@ -8,6 +9,7 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +23,7 @@ public class ZNodeWatcherService {
 
     private final CuratorFramework curatorFramework;
 
+    @Getter
     private String curStrategy;
 
     private Map<String, String> tokenTableMap;
@@ -35,9 +38,12 @@ public class ZNodeWatcherService {
      */
     public ZNodeWatcherService(CuratorFramework curatorFramework) {
         this.curatorFramework = curatorFramework;
+    }
+
+    @PostConstruct
+    public void init() {
         Properties properties = new Properties();
         try {
-            // todo 不应耦合
             byte[] tokenNodeData = curatorFramework.getData().forPath(tokenPath);
             properties.load(new ByteArrayInputStream(tokenNodeData));
             tokenTableMap = new ConcurrentHashMap<>((Map) properties);
@@ -47,7 +53,6 @@ public class ZNodeWatcherService {
             } else {
                 byte[] strategyNodeData = curatorFramework.getData().forPath(strategyPath);
                 if (strategyNodeData == null) {
-                    // 默认策略为random
                     curatorFramework.create().withMode(CreateMode.PERSISTENT).forPath(strategyPath, "random".getBytes(StandardCharsets.UTF_8));
                 } else {
                     curStrategy = new String(strategyNodeData, StandardCharsets.UTF_8);
@@ -62,7 +67,6 @@ public class ZNodeWatcherService {
             log.error("watcher load properties error", e);
             throw new RuntimeException(e);
         }
-
     }
 
     public String getTableNameByToken(String token) {

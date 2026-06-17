@@ -23,7 +23,7 @@ datasource:
 
   druid:
     one:
-      driver-class-name: com.mysql.jdbc.Driver
+      driver-class-name: com.mysql.cj.jdbc.Driver
       url: ${SPRING_DATASOURCE_URL_1:jdbc:mysql://localhost:3306/seq?verifyServerCertificate=false&useSSL=true}
       username: ${SPRING_DATASOURCE_USERNAME:root}
       password: ${SPRING_DATASOURCE_PASSWORD:123456}
@@ -34,7 +34,7 @@ datasource:
 
       removeAbandoned: false
     two:
-      driver-class-name: com.mysql.jdbc.Driver
+      driver-class-name: com.mysql.cj.jdbc.Driver
       url: ${SPRING_DATASOURCE_URL_2:jdbc:mysql://localhost:3307/seq?verifyServerCertificate=false&useSSL=true}
       username: ${SPRING_DATASOURCE_USERNAME:root}
       password: ${SPRING_DATASOURCE_PASSWORD:123456}
